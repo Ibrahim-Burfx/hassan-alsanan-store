@@ -496,7 +496,7 @@ ${itemsList}
             <div>
               <label className="block text-xs font-bold mb-1" style={{ color: T.primary }}>الاسم بالكامل *</label>
               <input
-                type="text" required placeholder="مثال: إبراهيم محمد"
+                type="text" required placeholder="مثال:  الاسم  ثلاثي "
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full border rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 bg-slate-50" style={{ borderColor: T.cardBorder }}
