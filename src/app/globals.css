@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700&family=Tajawal:wght@300;400;500;700&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --sidebar-width: 240px;
+
+  /* Custom colors */
+  --color-ink: #2B211C;
+  --color-espresso: #3E2E26;
+  --color-sand: #F6EEE4;
+  --color-cream: #FFFCF8;
+  --color-gold: #B08D57;
+  --color-rose: #C98B7B;
+  --color-sage: #8FA37E;
+  --color-teal: #A9C4C0;
+  --color-plum: #9B7EA3;
+  --color-tan: #D9B48F;
+  --color-taupe: #7C6A58;
+  --color-line: #E7DCC9;
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #F6EEE4;
+  --foreground: #2B211C;
+  --card: #FFFCF8;
+  --card-foreground: #2B211C;
+  --popover: #FFFCF8;
+  --popover-foreground: #2B211C;
+  --primary: #3E2E26;
+  --primary-foreground: #FFFCF8;
+  --secondary: #F6EEE4;
+  --secondary-foreground: #3E2E26;
+  --muted: #F6EEE4;
+  --muted-foreground: #7C6A58;
+  --accent: #B08D57;
+  --accent-foreground: #FFFCF8;
+  --destructive: #C98B7B;
+  --border: #E7DCC9;
+  --input: #E7DCC9;
+  --ring: #B08D57;
+  --chart-1: #B08D57;
+  --chart-2: #C98B7B;
+  --chart-3: #8FA37E;
+  --chart-4: #9B7EA3;
+  --chart-5: #A9C4C0;
+  --sidebar: #FFFCF8;
+  --sidebar-foreground: #2B211C;
+  --sidebar-primary: #3E2E26;
+  --sidebar-primary-foreground: #FFFCF8;
+  --sidebar-accent: #F6EEE4;
+  --sidebar-accent-foreground: #2B211C;
+  --sidebar-border: #E7DCC9;
+  --sidebar-ring: #B08D57;
+}
+
+.dark {
+  --background: #F6EEE4;
+  --foreground: #2B211C;
+  --card: #FFFCF8;
+  --card-foreground: #2B211C;
+  --popover: #FFFCF8;
+  --popover-foreground: #2B211C;
+  --primary: #3E2E26;
+  --primary-foreground: #FFFCF8;
+  --secondary: #F6EEE4;
+  --secondary-foreground: #3E2E26;
+  --muted: #F6EEE4;
+  --muted-foreground: #7C6A58;
+  --accent: #B08D57;
+  --accent-foreground: #FFFCF8;
+  --destructive: #C98B7B;
+  --border: #E7DCC9;
+  --input: #E7DCC9;
+  --ring: #B08D57;
+  --sidebar: #FFFCF8;
+  --sidebar-foreground: #2B211C;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    color: #2B211C !important;
+  }
+}
+
+* {
+  font-family: 'Tajawal', sans-serif;
+}
+
+/* إجبار كافة النصوص والحقول والمدخلات على اللون الأسود/الداكن */
+p, span, h1, h2, h3, h4, h5, h6, label, div, a {
+  color: #2B211C;
+}
+
+input, textarea, select {
+  color: #000000 !important;
+  background-color: #FFFFFF !important;
+  opacity: 1 !important;
+}
+
+::placeholder {
+  color: #555555 !important;
+  opacity: 1 !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease;
+}
