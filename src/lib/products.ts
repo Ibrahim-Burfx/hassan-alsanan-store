@@ -76,6 +76,6 @@ export function normalizeProduct(row: ProductRow): Product {
     isBestSeller: Boolean(row.is_bestseller),
     isFeatured: Boolean(row.is_featured),
     isOnSale: discountedPrice < originalPrice || Boolean(row.old_price && row.old_price > originalPrice),
-    imageUrl: row.images?.[0] || row.image_url || "✨",
+    imageUrl: row.image_url || (Array.isArray(row.images) ? row.images[0] : "") || "",
   };
 }

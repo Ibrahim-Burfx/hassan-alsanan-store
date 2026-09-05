@@ -68,10 +68,74 @@ const isUrl = (str: string) => str.startsWith("http://") || str.startsWith("http
 function TikTokIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-      <path fill="#25F4EE" d="M14.4 2h3.1c.2 1.4.8 2.6 1.8 3.6.9.8 2 1.2 3.2 1.2 3.2v3.1a8.5 8.5 0 0 1-5-1.6v5.1a6.1 6.1 0 1 1-6.1-6.1c.3 0 .6 0 .9.1v3.2a2.9 2.9 0 1 0 2.3 2.8V2h1.8Z" />
+      <path fill="#25F4EE" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.49 2.87 1.1-.01 2.15-.64 2.61-1.62.16-.29.24-.61.24-.93.01-3.47-.02-6.94-.01-10.41.01-3.17-.01-6.33.02-9.5z" />
       <path fill="#FE2C55" d="M12.9 3.4v12a6.1 6.1 0 0 1-6.1 6.1 6 6 0 0 1-3.5-1.1 6.1 6.1 0 0 0 10.7-4V11a8.5 8.5 0 0 0 5 1.6V9.5c-.8-.2-1.6-.6-2.2-1.2-1-1-1.6-2.2-1.8-3.6h-2.1V3.4Z" />
       <path fill="#111111" d="M13.5 2h3.1c.2 1.4.8 2.6 1.8 3.6.9.8 2 1.2 3.2 1.2v3.1a8.5 8.5 0 0 1-5-1.6v5.1a6.1 6.1 0 1 1-6.1-6.1c.3 0 .6 0 .9.1v3.2a2.9 2.9 0 1 0 2.3 2.8V2h-.2V2Z" />
     </svg>
+  );
+}
+
+function AnnouncementMarquee() {
+  const messages = Array.from({ length: 8 });
+
+  const messageGroup = (hidden: boolean) => (
+    <div className="flex shrink-0 items-center" aria-hidden={hidden}>
+      {messages.map((_, index) => (
+        <div key={index} className="flex shrink-0 items-center gap-2 px-6">
+          <CheckCircle2 size={15} className="shrink-0" color="#FFFFFF" />
+          <span className="text-xs font-extrabold tracking-wide sm:text-sm" style={{ color: "#FFFFFF" }}>
+            شحن مجاني لفترة محدودة على جميع الطلبات! 🚚
+          </span>
+          <span className="mx-1 text-white/60">•</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div
+      className="announcement-bar flex overflow-hidden whitespace-nowrap py-2 shadow-sm"
+      style={{ background: `linear-gradient(90deg, ${T.primary}, ${T.accent}, ${T.primary})` }}
+    >
+      <div className="announcement-marquee flex w-max" dir="ltr">
+        {messageGroup(false)}
+        {messageGroup(true)}
+      </div>
+
+      <style>{`
+        .announcement-marquee {
+          animation: announcement-marquee 20s linear infinite !important;
+          animation-play-state: running;
+          will-change: transform;
+        }
+
+        .announcement-bar:hover .announcement-marquee,
+        .announcement-bar:focus-within .announcement-marquee {
+          animation-play-state: paused !important;
+        }
+
+        @keyframes announcement-marquee {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (max-width: 640px) {
+          .announcement-marquee {
+            animation-duration: 14s;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .announcement-marquee {
+            animation-play-state: paused;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
 
@@ -263,7 +327,7 @@ function CartDrawer({ open, onClose, cart, setCart }: {
       alert("الرجاء ملء جميع البيانات المطلوبة");
       return;
     }
-
+            <path fill="#25F4EE" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.49 2.87 1.1-.01 2.15-.64 2.61-1.62.16-.29.24-.61.24-.93.01-3.47-.02-6.94-.01-10.41.01-3.17-.01-6.33.02-9.5z" />
     setIsSubmitting(true);
 
     try {
@@ -518,11 +582,12 @@ export default function StoreApp() {
     let active = true;
 
     const loadProducts = async () => {
-      const { data, error } = await supabase.from("products").select("*");
+      const { data, error } = await supabase.from("products").select("*").order("id", { ascending: true });
       if (error) {
         console.error("Failed to load products:", error);
       } else if (active) {
-        setProducts((data as ProductRow[]).map(normalizeProduct));
+        const rows = Array.isArray(data) ? (data as ProductRow[]) : [];
+        setProducts(rows.map(normalizeProduct));
       }
       if (active) setProductsLoading(false);
     };
@@ -587,49 +652,7 @@ export default function StoreApp() {
   return (
     <div className="min-h-screen font-sans" style={{ background: T.bg, color: T.textMain }}>
       
-      {/* Top Announcement Bar — Infinite RTL Marquee */}
-      <div
-        className="relative overflow-hidden py-2 shadow-sm"
-        style={{ background: `linear-gradient(90deg, ${T.primary}, ${T.accent}, ${T.primary})` }}
-      >
-        <div className="flex w-max whitespace-nowrap marquee-track">
-          {[0, 1].map((dup) => (
-            <div key={dup} className="flex items-center" aria-hidden={dup === 1}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2 px-6">
-                  <CheckCircle2 size={15} className="shrink-0" color="#FFFFFF" />
-                  <span
-                    className="text-xs sm:text-sm font-extrabold tracking-wide"
-                    style={{ color: "#FFFFFF" }}
-                  >
-                    شحن مجاني لفترة محدودة على جميع الطلبات! 🚚
-                  </span>
-                  <span className="mx-1 text-white/60">•</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <style jsx>{`
-          .marquee-track {
-            animation: marquee-rtl 22s linear infinite;
-          }
-          @keyframes marquee-rtl {
-            0% {
-              transform: translateX(0%);
-            }
-            100% {
-              transform: translateX(-50%);
-            }
-          }
-          @media (max-width: 640px) {
-            .marquee-track {
-              animation-duration: 14s;
-            }
-          }
-        `}</style>
-      </div>
+      <AnnouncementMarquee />
 
       {/* Main Header / Navigation Bar — Sticky Shrinking Header */}
       <header
