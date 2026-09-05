@@ -320,7 +320,9 @@ function CartDrawer({ open, onClose, cart, setCart }: {
 }) {
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({ name: "", phone: "", address: "", city: "القاهرة", notes: "" });
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const emptyFormData = { name: "", phone: "", address: "", city: "القاهرة", notes: "" };
+  const [formData, setFormData] = useState(emptyFormData);
 
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
@@ -374,33 +376,56 @@ ${itemsList}
 💰 *إجمالي الطلب:* ${total.toLocaleString("ar-EG")} ج.م
 📌 *طريقة الدفع:* الدفع عند الاستلام (COD)`;
 
+      // Reset cart + form fields immediately, and show an explicit success screen
+      // (works the same on desktop and mobile, no dependency on the WhatsApp redirect).
       setCart([]);
+      setFormData(emptyFormData);
       setShowCheckoutForm(false);
-      onClose();
+      setOrderSuccess(true);
 
-      window.open(waLink(waMessage), "_blank");
+      // Redirect to WhatsApp after the success message has had a moment to be read.
+      // Using window.location.href (not window.open) so desktop browsers never treat
+      // this as a blocked pop-up — it's a normal same-tab navigation.
+      setTimeout(() => {
+        window.location.href = waLink(waMessage);
+      }, 2500);
 
     } catch (err) {
       console.error("Error submitting order:", err);
-      alert("حدث خطأ، سيتم تحويلك للواتساب مباشرة.");
-      window.open(waLink(`طلب جديد بقيمة ${total} ج.م`), "_blank");
+      setCart([]);
+      setFormData(emptyFormData);
+      setShowCheckoutForm(false);
+      setOrderSuccess(true);
+      setTimeout(() => {
+        window.location.href = waLink(`طلب جديد بقيمة ${total} ج.م`);
+      }, 2500);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const closeDrawer = () => {
+    onClose();
+    setOrderSuccess(false);
+    setShowCheckoutForm(false);
   };
 
   return (
     <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`}>
       <div
         className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
-        onClick={onClose}
+        onClick={closeDrawer}
       />
       <div
         className={`absolute top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="flex justify-between items-center p-4 border-b" style={{ borderColor: T.cardBorder }}>
           <h3 className="font-extrabold flex items-center gap-2 text-sm" style={{ color: T.primary }}>
-            {showCheckoutForm ? (
+            {orderSuccess ? (
+              <>
+                <CheckCircle2 size={18} color="#16A34A" /> تم إتمام الطلب
+              </>
+            ) : showCheckoutForm ? (
               <>
                 <ShieldCheck size={18} color={T.accent} /> إتمام الشراء والتأكيد
               </>
@@ -408,10 +433,25 @@ ${itemsList}
               "سلة المشتريات"
             )}
           </h3>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 text-slate-500"><X size={20} /></button>
+          <button onClick={closeDrawer} className="p-1 rounded-full hover:bg-slate-100 text-slate-500"><X size={20} /></button>
         </div>
 
-        {!showCheckoutForm ? (
+        {orderSuccess ? (
+          <div className="flex flex-col items-center justify-center text-center px-6" style={{ height: "calc(100% - 65px)" }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-5" style={{ background: "#DCFCE7" }}>
+              <CheckCircle2 size={36} color="#16A34A" />
+            </div>
+            <p className="text-sm font-extrabold leading-relaxed" style={{ color: T.textMain }}>
+              تم إتمام طلبك بنجاح! 🎉
+            </p>
+            <p className="text-xs font-medium leading-relaxed mt-2" style={{ color: T.textMuted }}>
+              شكراً لثقتك بمتجر حسن السنان، وسنتواصل معك قريباً لتأكيد الطلب.
+            </p>
+            <p className="text-[11px] mt-4 text-slate-400">
+              جاري تحويلك إلى واتساب الآن...
+            </p>
+          </div>
+        ) : !showCheckoutForm ? (
           <>
             <div className="p-4 space-y-3 overflow-y-auto" style={{ maxHeight: "calc(100% - 150px)" }}>
               {cart.length === 0 && (
@@ -585,10 +625,48 @@ export default function StoreApp() {
   return (
     <div className="min-h-screen font-sans" style={{ background: T.bg, color: T.textMain }}>
       
-      {/* Top Banner */}
-      <div className="bg-slate-900 text-white text-[11px] py-1.5 text-center font-medium tracking-wide flex items-center justify-center gap-2">
-        <CheckCircle2 size={13} color={T.accent} />
-        <span>شحن سريع لجميع محافظات مصر - التوصيل والدفع عند الاستلام</span>
+      {/* Top Announcement Bar — Infinite RTL Marquee */}
+      <div
+        className="relative overflow-hidden py-2 shadow-sm"
+        style={{ background: `linear-gradient(90deg, ${T.primary}, ${T.accent}, ${T.primary})` }}
+      >
+        <div className="flex w-max whitespace-nowrap marquee-track">
+          {[0, 1].map((dup) => (
+            <div key={dup} className="flex items-center" aria-hidden={dup === 1}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2 px-6">
+                  <CheckCircle2 size={15} className="shrink-0" color="#FFFFFF" />
+                  <span
+                    className="text-xs sm:text-sm font-extrabold tracking-wide"
+                    style={{ color: "#FFFFFF" }}
+                  >
+                    شحن مجاني لفترة محدودة على جميع الطلبات! 🚚
+                  </span>
+                  <span className="mx-1 text-white/60">•</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <style jsx>{`
+          .marquee-track {
+            animation: marquee-rtl 22s linear infinite;
+          }
+          @keyframes marquee-rtl {
+            0% {
+              transform: translateX(0%);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
+          @media (max-width: 640px) {
+            .marquee-track {
+              animation-duration: 14s;
+            }
+          }
+        `}</style>
       </div>
 
       {/* Main Header / Navigation Bar — Sticky Shrinking Header */}
