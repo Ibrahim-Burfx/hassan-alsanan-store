@@ -9,7 +9,7 @@ import {
 
 // استدعاء عميل Supabase المربوط بملف supabase.ts
 import { supabase } from "@/supabase";
-import { CATEGORIES, makeProducts, type Product } from "@/lib/products";
+import { CATEGORIES, normalizeProduct, type Product, type ProductRow } from "@/lib/products";
 
 /* ============================= DESIGN TOKENS ============================= */
 const T = {
@@ -503,7 +503,8 @@ ${itemsList}
 
 /* ============================= MAIN STORE APP ============================= */
 export default function StoreApp() {
-  const [products] = useState<Product[]>(makeProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartHydrated, setCartHydrated] = useState(false);
@@ -512,6 +513,25 @@ export default function StoreApp() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadProducts = async () => {
+      const { data, error } = await supabase.from("products").select("*");
+      if (error) {
+        console.error("Failed to load products:", error);
+      } else if (active) {
+        setProducts((data as ProductRow[]).map(normalizeProduct));
+      }
+      if (active) setProductsLoading(false);
+    };
+
+    void loadProducts();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     try {
