@@ -1,5 +1,5 @@
 'use client';
-
+import Link from 'next/link'
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   Search, ShoppingBag, X, Star, Plus, Minus, Trash2,
@@ -9,6 +9,7 @@ import {
 
 // استدعاء عميل Supabase المربوط بملف supabase.ts
 import { supabase } from "@/supabase";
+import { CATEGORIES, makeProducts, type Product } from "@/lib/products";
 
 /* ============================= DESIGN TOKENS ============================= */
 const T = {
@@ -26,6 +27,7 @@ const T = {
 };
 
 const WHATSAPP_NUMBER = "201010425992";
+const CART_STORAGE_KEY = "hassan-al-sinan-cart";
 
 const GOVERNORATES = [
   "القاهرة", "الجيزة", "الإسكندرية", "الدقهلية", "البحر الأحمر", "البحيرة", "الفيوم",
@@ -34,71 +36,6 @@ const GOVERNORATES = [
   "مطروح", "الأقصر", "قنا", "شمال سيناء", "سوهاج",
 ];
 
-/* ============================= CATEGORY DATA ============================= */
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-}
-
-const CATEGORIES: Category[] = [
-  { id: "skincare", name: "العناية بالبشرة", icon: "🧴" },
-  { id: "haircare", name: "العناية بالشعر", icon: "💇‍♀️" },
-  { id: "bodycare", name: "العناية بالجسم", icon: "🧼" },
-  { id: "makeup", name: "المكياج", icon: "💄" },
-  { id: "perfume", name: "العطور", icon: "🌸" },
-  { id: "accessories", name: "الإكسسوارات", icon: "🎀" },
-  { id: "salon", name: "مستلزمات الكوافير", icon: "✂️" },
-];
-
-const catById = (id: string) => CATEGORIES.find((c) => c.id === id);
-
-/* ============================= RAW PRODUCT SEED ============================= */
-type RawProductTuple = [string, string, string, string, number, number | null, boolean, boolean, boolean, boolean, string];
-
-const RAW: RawProductTuple[] = [
-  ["كريم أساس مطفي للبشرة الدهنية", "L'Oréal Paris", "makeup", "الوجه", 420, 480, false, true, false, false, "https://m.media-amazon.com/images/I/51J79-cUeRL._AC_SL1500_.jpg"],
-  ["كونسيلر لتغطية الهالات السوداء", "Maybelline New York", "makeup", "الوجه", 210, null, true, false, false, true, "https://i.makeup.ae/a/ah/ah1tq2cjhyus.jpg"],
-  ["باودر مضغوط شفاف طويل الثبات", "Essence", "makeup", "الوجه", 180, 220, false, false, false, true, "💄"],
-  ["بلاشر كريمي بلمسة وردية طبيعية", "NYX Professional Makeup", "makeup", "الوجه", 260, null, false, false, true, false, "💄"],
-  ["ماسكارا تكثيف وتطويل مقاومة للماء", "Maybelline New York", "makeup", "العيون", 320, 380, false, true, false, false, "https://cdn.salla.sa/XjKDR/35898ce7-7dcb-43ac-8daa-8df0b7dab1fc-1000x1000-uJa133Dp96TT9eAJoRSDufsh88udJ8HbcysMoyLt.jpg"],
-  ["آيلاينر سائل دقيق مقاوم للماء", "NYX Professional Makeup", "makeup", "العيون", 190, null, true, false, false, false, "👁️"],
-  ["غسول منظف بالزنك للبشرة الدهنية", "CeraVe", "skincare", "غسول", 380, 450, false, true, false, false, "🧴"],
-  ["غسول لطيف بدون رغوة للبشرة الحساسة", "La Roche-Posay", "skincare", "غسول", 420, null, false, false, true, false, "🧴"],
-  ["سيروم فيتامين سي 23% للتفتيح", "The Ordinary", "skincare", "سيروم", 380, 450, false, true, false, false, "🧪"],
-  ["سيروم نياسيناميد 10% لتقليل المسام", "The Ordinary", "skincare", "سيروم", 260, null, false, false, true, false, "🧪"],
-  ["واقي شمس SPF50 غير دهني", "La Roche-Posay", "skincare", "واقي الشمس", 480, 560, false, true, true, false, "☀️"],
-  ["شامبو بدون سلفات للشعر الجاف", "Kerastase", "haircare", "شامبو", 650, 750, false, false, true, false, "💇‍♀️"],
-  ["ماسك مغذي عميق للشعر الجاف", "Schwarzkopf", "haircare", "ماسكات", 320, 380, false, true, false, false, "💇‍♀️"],
-  ["علاج مكثف لتساقط الشعر", "Kerastase", "haircare", "علاج الشعر", 720, 850, false, true, true, false, "💇‍♀️"],
-  ["لوشن مرطب للجسم بزبدة الشيا", "Jergens", "bodycare", "مرطبات الجسم", 220, 260, false, true, false, false, "🧼"],
-  ["عطر نسائي فاخر فانيليا وياسمين", "حسن السنان", "perfume", "عطور نسائية", 480, 560, false, true, true, false, "🌸"],
-  ["عطر رجالي خشبي بالعود", "حسن السنان", "perfume", "عطور رجالية", 520, 600, false, true, false, false, "🪵"],
-  ["طقم فرش مكياج احترافي 12 قطعة", "Essence", "accessories", "فرش مكياج", 350, 420, false, true, false, false, "🎀"],
-  ["مكواة فرد شعر سيراميك احترافية", "Wella", "salon", "أدوات تصفيف", 950, 1100, false, true, true, false, "✂️"],
-];
-
-interface Product {
-  id: number;
-  sku: string;
-  name: string;
-  brand: string;
-  category: string;
-  subCategory: string;
-  description: string;
-  price: number;
-  oldPrice: number | null;
-  discountPercentage: number;
-  stock: number;
-  rating: number;
-  reviewsCount: number;
-  isNew: boolean;
-  isBestSeller: boolean;
-  isFeatured: boolean;
-  isOnSale: boolean;
-  imageUrl: string;
-}
-
 interface CartItem {
   id: number;
   name: string;
@@ -106,27 +43,6 @@ interface CartItem {
   category: string;
   imageUrl?: string;
   qty: number;
-}
-
-function makeProducts(): Product[] {
-  return RAW.map((r, i) => {
-    const [name, brand, category, subCategory, price, oldPrice, isNew, isBestSeller, isFeatured, isOnSale, imageUrl] = r;
-    const discountPercentage = oldPrice ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
-    return {
-      id: i + 1,
-      sku: `HS-${category.slice(0, 3).toUpperCase()}-${String(i + 1).padStart(3, "0")}`,
-      name, brand, category, subCategory,
-      description: `${name} من ${brand}، منتج أصلي 100% لتوفير أعلى مستوى من العناية.`,
-      price, oldPrice: oldPrice || null,
-      discountPercentage,
-      stock: 8 + ((i * 7) % 40),
-      rating: +(4.2 + ((i * 3) % 8) / 10).toFixed(1),
-      reviewsCount: 15 + ((i * 11) % 150),
-      isNew, isBestSeller, isFeatured,
-      isOnSale: !!oldPrice,
-      imageUrl: imageUrl || catById(category)?.icon || "✨",
-    };
-  });
 }
 
 /* ============================= HELPERS ============================= */
@@ -149,14 +65,24 @@ function Stars({ rating }: { rating: number }) {
 
 const isUrl = (str: string) => str.startsWith("http://") || str.startsWith("https://") || str.startsWith("/");
 
+function TikTokIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+      <path fill="#25F4EE" d="M14.4 2h3.1c.2 1.4.8 2.6 1.8 3.6.9.8 2 1.2 3.2 1.2 3.2v3.1a8.5 8.5 0 0 1-5-1.6v5.1a6.1 6.1 0 1 1-6.1-6.1c.3 0 .6 0 .9.1v3.2a2.9 2.9 0 1 0 2.3 2.8V2h1.8Z" />
+      <path fill="#FE2C55" d="M12.9 3.4v12a6.1 6.1 0 0 1-6.1 6.1 6 6 0 0 1-3.5-1.1 6.1 6.1 0 0 0 10.7-4V11a8.5 8.5 0 0 0 5 1.6V9.5c-.8-.2-1.6-.6-2.2-1.2-1-1-1.6-2.2-1.8-3.6h-2.1V3.4Z" />
+      <path fill="#111111" d="M13.5 2h3.1c.2 1.4.8 2.6 1.8 3.6.9.8 2 1.2 3.2 1.2v3.1a8.5 8.5 0 0 1-5-1.6v5.1a6.1 6.1 0 1 1-6.1-6.1c.3 0 .6 0 .9.1v3.2a2.9 2.9 0 1 0 2.3 2.8V2h-.2V2Z" />
+    </svg>
+  );
+}
+
 /* ============================= PRODUCT CARD ============================= */
-function ProductCard({ p, onOpen, onAddToCart }: { p: Product; onOpen: (p: Product) => void; onAddToCart: (p: Product) => void }) {
+function ProductCard({ p, onAddToCart }: { p: Product; onAddToCart: (p: Product) => void }) {
   return (
     <div
       className="w-64 shrink-0 border rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-xl bg-white group"
       style={{ borderColor: T.cardBorder }}
     >
-      <div className="relative cursor-pointer p-4 bg-slate-50/50" onClick={() => onOpen(p)}>
+      <Link href={`/product/${p.id}`} className="relative block cursor-pointer p-4 bg-slate-50/50">
         <div className="h-44 rounded-xl bg-white flex items-center justify-center text-5xl relative border border-slate-100 shadow-sm group-hover:scale-105 transition-transform duration-300 overflow-hidden">
           {isUrl(p.imageUrl) ? (
             <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain p-2 mix-blend-multiply" />
@@ -185,7 +111,7 @@ function ProductCard({ p, onOpen, onAddToCart }: { p: Product; onOpen: (p: Produ
             <span className="text-[10px] font-medium" style={{ color: T.textMuted }}>({p.reviewsCount})</span>
           </div>
         </div>
-      </div>
+      </Link>
 
       <div className="p-4 border-t flex flex-col gap-3 bg-white" style={{ borderColor: T.cardBorder }}>
         <div className="flex items-baseline justify-between">
@@ -205,10 +131,9 @@ function ProductCard({ p, onOpen, onAddToCart }: { p: Product; onOpen: (p: Produ
 }
 
 /* ============================= HORIZONTAL SECTION ============================= */
-function HorizontalSection({ title, products, onOpen, onAddToCart }: {
+function HorizontalSection({ title, products, onAddToCart }: {
   title: string;
   products: Product[];
-  onOpen: (p: Product) => void;
   onAddToCart: (p: Product) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -247,7 +172,7 @@ function HorizontalSection({ title, products, onOpen, onAddToCart }: {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {products.map((p) => (
-          <ProductCard key={p.id} p={p} onOpen={onOpen} onAddToCart={onAddToCart} />
+          <ProductCard key={p.id} p={p} onAddToCart={onAddToCart} />
         ))}
       </div>
     </section>
@@ -376,16 +301,11 @@ ${itemsList}
 💰 *إجمالي الطلب:* ${total.toLocaleString("ar-EG")} ج.م
 📌 *طريقة الدفع:* الدفع عند الاستلام (COD)`;
 
-      // Reset cart + form fields immediately, and show an explicit success screen
-      // (works the same on desktop and mobile, no dependency on the WhatsApp redirect).
       setCart([]);
       setFormData(emptyFormData);
       setShowCheckoutForm(false);
       setOrderSuccess(true);
 
-      // Redirect to WhatsApp after the success message has had a moment to be read.
-      // Using window.location.href (not window.open) so desktop browsers never treat
-      // this as a blocked pop-up — it's a normal same-tab navigation.
       setTimeout(() => {
         window.location.href = waLink(waMessage);
       }, 2500);
@@ -466,7 +386,7 @@ ${itemsList}
                     {i.imageUrl && isUrl(i.imageUrl) ? (
                       <img src={i.imageUrl} alt={i.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span>{i.imageUrl || catById(i.category)?.icon}</span>
+                      <span>{i.imageUrl || "✨"}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -586,11 +506,31 @@ export default function StoreApp() {
   const [products] = useState<Product[]>(makeProducts);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartHydrated, setCartHydrated] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedCart = window.localStorage.getItem(CART_STORAGE_KEY);
+      if (storedCart) setCart(JSON.parse(storedCart) as CartItem[]);
+    } catch {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+    } finally {
+      setCartHydrated(true);
+      if (new URLSearchParams(window.location.search).get("cart") === "open") {
+        setCartOpen(true);
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (cartHydrated) window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }, [cart, cartHydrated]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -621,6 +561,8 @@ export default function StoreApp() {
     });
     setCartOpen(true);
   };
+
+  const totalCartCount = cart.reduce((acc, item) => acc + item.qty, 0);
 
   return (
     <div className="min-h-screen font-sans" style={{ background: T.bg, color: T.textMain }}>
@@ -703,151 +645,149 @@ export default function StoreApp() {
               onClick={() => setActiveCategory("all")}
               className={`hover:text-amber-600 transition-colors ${activeCategory === "all" ? "text-amber-600 border-b-2 border-amber-600 pb-1" : ""}`}
             >
-              الرئيسية
+              الكل
             </button>
-            {CATEGORIES.slice(0, 5).map((c) => (
+            {CATEGORIES.map((cat) => (
               <button
-                key={c.id}
-                onClick={() => setActiveCategory(c.id)}
-                className={`hover:text-amber-600 transition-colors ${activeCategory === c.id ? "text-amber-600 border-b-2 border-amber-600 pb-1" : ""}`}
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`hover:text-amber-600 transition-colors flex items-center gap-1 ${activeCategory === cat.id ? "text-amber-600 border-b-2 border-amber-600 pb-1" : ""}`}
               >
-                {c.name}
+                <span>{cat.icon}</span>
+                <span>{cat.name}</span>
               </button>
             ))}
           </nav>
 
-          {/* Search Box */}
-          <div className="relative flex-1 max-w-xs hidden sm:block">
-            <input
-              type="text" 
-              placeholder="ابحث عن منتج أو ماركة..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border rounded-full pl-4 pr-9 py-2 text-xs bg-slate-50 focus:outline-none focus:ring-1 focus:ring-amber-500" 
+          {/* Search Input & Cart Trigger Button */}
+          <div className="flex items-center gap-3">
+            <div className="relative hidden sm:block w-48 md:w-64">
+              <input
+                type="text"
+                placeholder="بحث عن منتج..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-100 rounded-full pl-4 pr-10 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 border border-transparent"
+              />
+              <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
+            </div>
+
+            <button
+              onClick={() => setCartOpen(true)}
+              className="relative p-2.5 rounded-full border bg-white shadow-sm transition-transform hover:scale-105 active:scale-95"
               style={{ borderColor: T.cardBorder }}
-            />
-            <Search className="absolute right-3 top-2.5 text-slate-400" size={16} />
+            >
+              <ShoppingBag size={20} color={T.primary} />
+              {totalCartCount > 0 && (
+                <span className="absolute -top-1 -right-1 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center text-white bg-amber-600 shadow-sm">
+                  {totalCartCount}
+                </span>
+              )}
+            </button>
           </div>
-
-          {/* Cart Icon */}
-          <button
-            onClick={() => setCartOpen(true)}
-            className="relative p-3 rounded-full border bg-slate-50 text-slate-800 transition-all hover:bg-slate-100 active:scale-95"
-            style={{ borderColor: T.cardBorder }}
-          >
-            <ShoppingBag size={22} />
-            {cart.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] text-white flex items-center justify-center font-bold shadow-sm" style={{ background: T.accentRose }}>
-                {cart.reduce((s, i) => s + i.qty, 0)}
-              </span>
-            )}
-          </button>
-
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Nav Drawer / Overlay */}
         {menuOpen && (
-          <div className="lg:hidden bg-white border-b p-4 space-y-2 text-xs font-bold border-slate-200">
-            <button onClick={() => { setActiveCategory("all"); setMenuOpen(false); }} className="block w-full text-right py-2 border-b">الرئيسية</button>
-            {CATEGORIES.map((c) => (
+          <div className="lg:hidden border-t bg-white px-4 py-4 space-y-3 shadow-md mt-2" style={{ borderColor: T.cardBorder }}>
+            <div className="relative mb-3">
+              <input
+                type="text"
+                placeholder="بحث..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-100 rounded-xl pl-4 pr-10 py-2 text-xs font-semibold focus:outline-none"
+              />
+              <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
+            </div>
+            <div className="flex flex-col gap-2 font-bold text-xs">
               <button
-                key={c.id}
-                onClick={() => { setActiveCategory(c.id); setMenuOpen(false); }}
-                className="block w-full text-right py-2 border-b text-slate-700"
+                onClick={() => { setActiveCategory("all"); setMenuOpen(false); }}
+                className={`p-2 rounded-lg text-right ${activeCategory === "all" ? "bg-amber-50 text-amber-600" : "text-slate-700"}`}
               >
-                {c.icon} {c.name}
+                جميع المنتجات
               </button>
-            ))}
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => { setActiveCategory(cat.id); setMenuOpen(false); }}
+                  className={`p-2 rounded-lg text-right flex items-center gap-2 ${activeCategory === cat.id ? "bg-amber-50 text-amber-600" : "text-slate-700"}`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </header>
 
-      {/* Hero Banner */}
-      {activeCategory === "all" && !searchQuery && (
-        <section className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white py-12 px-4 shadow-inner">
-          <div className="max-w-7xl mx-auto text-center space-y-3">
-            <span className="text-xs font-bold uppercase tracking-widest bg-black/20 px-3 py-1 rounded-full">
-              منتجات أصلية 100%
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-black">
-              عالمك المتكامل للعناية بالبشرة والتجميل
-            </h2>
-            <p className="text-xs sm:text-sm text-amber-100 max-w-xl mx-auto font-medium">
-              تصفحي أفضل الماركات العالمية والمحلية بأسعار خاصة وشحن سريع لكل مصر.
-            </p>
-          </div>
-        </section>
-      )}
-
-      {/* Main Content Areas */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        
-        {/* Categories Bar */}
-        <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Category Pills Bar */}
+        <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-6">
           <button
             onClick={() => setActiveCategory("all")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${activeCategory === "all" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 hover:bg-slate-100"}`}
-            style={{ borderColor: activeCategory === "all" ? T.primary : T.cardBorder }}
+            className={`px-4 py-2 rounded-full text-xs font-extrabold whitespace-nowrap transition-all shadow-sm ${
+              activeCategory === "all" ? "bg-amber-600 text-white" : "bg-white border text-slate-700 hover:bg-slate-50"
+            }`}
+            style={{ borderColor: activeCategory === "all" ? "transparent" : T.cardBorder }}
           >
             ✨ الكل
           </button>
-          {CATEGORIES.map((c) => (
+          {CATEGORIES.map((cat) => (
             <button
-              key={c.id}
-              onClick={() => setActiveCategory(c.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${activeCategory === c.id ? "bg-amber-600 text-white border-amber-600" : "bg-white text-slate-700 hover:bg-slate-100"}`}
-              style={{ borderColor: activeCategory === c.id ? T.accent : T.cardBorder }}
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`px-4 py-2 rounded-full text-xs font-extrabold whitespace-nowrap transition-all shadow-sm flex items-center gap-1.5 ${
+                activeCategory === cat.id ? "bg-amber-600 text-white" : "bg-white border text-slate-700 hover:bg-slate-50"
+              }`}
+              style={{ borderColor: activeCategory === cat.id ? "transparent" : T.cardBorder }}
             >
-              {c.icon} {c.name}
+              <span>{cat.icon}</span>
+              <span>{cat.name}</span>
             </button>
           ))}
         </div>
 
-        {/* Horizontal Sections (Only on Home & No active Search) */}
+        {/* Featured Horizontal Sections (when viewing all categories) */}
         {activeCategory === "all" && !searchQuery && (
           <>
             <HorizontalSection
               title="🔥 الأكثر مبيعاً"
               products={bestSellers}
-              onOpen={setSelectedProduct}
               onAddToCart={handleAddToCart}
             />
             <HorizontalSection
-              title="💥 عروض وخصومات خاصة"
+              title="💥 عروض خاصة وخصومات"
               products={saleProducts}
-              onOpen={setSelectedProduct}
               onAddToCart={handleAddToCart}
             />
           </>
         )}
 
-        {/* Catalog Grid Section */}
-        <section className="my-10">
-          <div className="mb-6">
-            <h2 className="text-xl font-extrabold" style={{ color: T.textMain }}>
-              {activeCategory === "all" ? "جميع المنتجات" : catById(activeCategory)?.name}
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">عرض {filteredProducts.length} منتج</p>
-          </div>
+        {/* Main Products Grid */}
+        <div className="my-8">
+          <h2 className="text-xl font-extrabold mb-6" style={{ color: T.textMain }}>
+            {activeCategory === "all"
+              ? searchQuery ? `نتائج البحث عن: "${searchQuery}"` : "جميع المنتجات"
+              : CATEGORIES.find((c) => c.id === activeCategory)?.name}
+          </h2>
 
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-20 bg-white border rounded-2xl" style={{ borderColor: T.cardBorder }}>
-              <Search size={48} className="mx-auto text-slate-300 mb-3" />
-              <p className="text-sm font-bold text-slate-600">لم نجد أي منتجات تطابق البحث</p>
+            <div className="text-center py-20 bg-white rounded-3xl border shadow-sm" style={{ borderColor: T.cardBorder }}>
+              <p className="text-base font-bold text-slate-500">لا توجد منتجات تطابق اختيارك حالياً.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
               {filteredProducts.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  p={p}
-                  onOpen={setSelectedProduct}
-                  onAddToCart={handleAddToCart}
-                />
+                <div key={p.id} className="w-full flex justify-center">
+                  <ProductCard p={p} onAddToCart={handleAddToCart} />
+                </div>
               ))}
             </div>
           )}
-        </section>
+        </div>
       </main>
 
       {/* Footer */}
@@ -856,7 +796,7 @@ export default function StoreApp() {
           <div>
             <h3 className="!text-white text-base font-extrabold mb-3" style={{ color: "#FFFFFF" }}>حسن السنان</h3>
             <p className="!text-gray-100 leading-relaxed" style={{ color: "#F3F4F6" }}>
-              متجرك المتخصص الأول لمستحضرات التجميل والعناية بالبشرة والشعر. نضمن لك جودة وأصالة كافة المنتجات مع أسرع خدمة توصيل.
+              متجرك الموثوق لمستحضرات التجميل والعناية بالبشرة والشعر. نضمن لك جودة وأصالة كافة المنتجات مع أسرع خدمة توصيل.
             </p>
           </div>
 
@@ -898,43 +838,16 @@ export default function StoreApp() {
             </a>
 
             <div className="flex items-center gap-3 mt-5">
-              <a
-                href="https://www.instagram.com/hassan.alsanan"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Instagram"
-                className="p-2.5 rounded-full transition-all hover:opacity-90"
-                style={{ backgroundColor: T.accent }}
-              >
+              <a href="https://www.instagram.com/hassan.alsanan" target="_blank" rel="noreferrer" aria-label="Instagram" className="p-2.5 rounded-full transition-all hover:opacity-90" style={{ backgroundColor: T.accent }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
                 </svg>
               </a>
-              <a
-                href="https://www.tiktok.com/@hassan.alsanan"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="TikTok"
-                className="p-2.5 rounded-full transition-all hover:opacity-90"
-                style={{ backgroundColor: T.accent }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF">
-                  <path d="M16.6 5.82c-.9-.98-1.4-2.26-1.4-3.6h-3.1v13.9c0 1.62-1.32 2.94-2.94 2.94a2.94 2.94 0 0 1-2.94-2.94 2.94 2.94 0 0 1 2.94-2.94c.29 0 .57.04.83.12v-3.15a6.1 6.1 0 0 0-.83-.06A6.06 6.06 0 0 0 3.1 18.05a6.06 6.06 0 0 0 6.06 6.06 6.06 6.06 0 0 0 6.06-6.06V9.68a8.5 8.5 0 0 0 4.96 1.58V8.16c-1.16 0-2.28-.4-3.18-1.13a5.6 5.6 0 0 1-.4-1.21z" />
-                </svg>
+              <a href="https://www.tiktok.com/@hassan.alsanan" target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-amber-600 transition-all duration-200 hover:scale-110 hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900" title="TikTok حسن السنان">
+                <TikTokIcon />
               </a>
-              <a
-                href="https://www.facebook.com/p/%D8%AD%D8%B3%D9%86-%D8%A7%D9%84%D8%B3%D9%86%D8%A7%D9%86-%D9%84%D9%85%D8%B3%D8%AA%D8%AD%D8%B6%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%AA%D8%AC%D9%85%D9%8A%D9%84-61567231881425/"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Facebook"
-                className="p-2.5 rounded-full transition-all hover:opacity-90"
-                style={{ backgroundColor: T.accent }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF">
-                  <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94z" />
-                </svg>
+              <a href="https://www.facebook.com/p/%D8%AD%D8%B3%D9%86-%D8%A7%D9%84%D8%B3%D9%86%D8%A7%D9%86-%D9%84%D9%85%D8%B3%D8%AA%D8%AD%D8%B6%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%AA%D8%AC%D9%85%D9%8A%D9%84-61567231881425/" target="_blank" rel="noreferrer" aria-label="Facebook" className="p-2.5 rounded-full transition-all hover:opacity-90" style={{ backgroundColor: T.accent }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94z" /></svg>
               </a>
             </div>
           </div>
@@ -950,14 +863,12 @@ export default function StoreApp() {
         onClose={() => setSelectedProduct(null)}
         onAddToCart={handleAddToCart}
       />
-
       <CartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         cart={cart}
         setCart={setCart}
       />
-
     </div>
   );
 }
