@@ -1,4 +1,10 @@
 'use client';
+
+
+
+
+
+
 import Link from 'next/link'
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
@@ -75,69 +81,66 @@ function TikTokIcon() {
   );
 }
 
-function AnnouncementMarquee() {
-  const messages = Array.from({ length: 8 });
 
-  const messageGroup = (hidden: boolean) => (
-    <div className="flex shrink-0 items-center" aria-hidden={hidden}>
-      {messages.map((_, index) => (
-        <div key={index} className="flex shrink-0 items-center gap-2 px-6">
+
+
+
+function AnnouncementMarquee() {
+  const MESSAGE_TEXT = "شحن مجاني لفترة محدودة على جميع الطلبات! 🚚";
+  const REPEATS_PER_GROUP = 6;
+
+  const messageGroup = (groupKey: string) => (
+    <div className="inline-flex shrink-0 items-center" aria-hidden={groupKey === "clone"}>
+      {Array.from({ length: REPEATS_PER_GROUP }).map((_, i) => (
+        <span key={`${groupKey}-${i}`} className="inline-flex shrink-0 items-center gap-2 px-6">
           <CheckCircle2 size={15} className="shrink-0" color="#FFFFFF" />
-          <span className="text-xs font-extrabold tracking-wide sm:text-sm" style={{ color: "#FFFFFF" }}>
-            شحن مجاني لفترة محدودة على جميع الطلبات! 🚚
+          <span className="whitespace-nowrap text-xs font-extrabold tracking-wide sm:text-sm" style={{ color: "#FFFFFF" }}>
+            {MESSAGE_TEXT}
           </span>
-          <span className="mx-1 text-white/60">•</span>
-        </div>
+          <span className="text-white/60">•</span>
+        </span>
       ))}
     </div>
   );
 
   return (
     <div
-      className="announcement-bar flex overflow-hidden whitespace-nowrap py-2 shadow-sm"
+      dir="ltr"
+      className="relative overflow-hidden whitespace-nowrap py-2 shadow-sm"
       style={{ background: `linear-gradient(90deg, ${T.primary}, ${T.accent}, ${T.primary})` }}
     >
-      <div className="announcement-marquee flex w-max" dir="ltr">
-        {messageGroup(false)}
-        {messageGroup(true)}
+      <div
+        dir="ltr"
+        className="inline-flex w-max shrink-0 items-center"
+        style={{
+          animation: "marquee-scroll 22s linear infinite",
+          animationPlayState: "running",
+          willChange: "transform",
+        }}
+      >
+        {messageGroup("main")}
+        {messageGroup("clone")}
       </div>
 
-      <style>{`
-        .announcement-marquee {
-          animation: announcement-marquee 20s linear infinite !important;
-          animation-play-state: running;
-          will-change: transform;
-        }
-
-        .announcement-bar:hover .announcement-marquee,
-        .announcement-bar:focus-within .announcement-marquee {
-          animation-play-state: paused !important;
-        }
-
-        @keyframes announcement-marquee {
-          from {
-            transform: translateX(0);
+      <style jsx>{`
+        @keyframes marquee-scroll {
+          0% {
+            transform: translate3d(0, 0, 0);
           }
-          to {
-            transform: translateX(-50%);
-          }
-        }
-
-        @media (max-width: 640px) {
-          .announcement-marquee {
-            animation-duration: 14s;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .announcement-marquee {
-            animation-play-state: paused;
+          100% {
+            transform: translate3d(-50%, 0, 0);
           }
         }
       `}</style>
     </div>
   );
 }
+
+
+
+
+
+
 
 /* ============================= PRODUCT CARD ============================= */
 function ProductCard({ p, onAddToCart }: { p: Product; onAddToCart: (p: Product) => void }) {
@@ -565,6 +568,8 @@ ${itemsList}
   );
 }
 
+
+
 /* ============================= MAIN STORE APP ============================= */
 export default function StoreApp() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -577,7 +582,7 @@ export default function StoreApp() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
+const productsScrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let active = true;
 
@@ -809,28 +814,52 @@ export default function StoreApp() {
           </>
         )}
 
-        {/* Main Products Grid */}
-        <div className="my-8">
-          <h2 className="text-xl font-extrabold mb-6" style={{ color: T.textMain }}>
-            {activeCategory === "all"
-              ? searchQuery ? `نتائج البحث عن: "${searchQuery}"` : "جميع المنتجات"
-              : CATEGORIES.find((c) => c.id === activeCategory)?.name}
-          </h2>
+      {/* Main Products Grid — Horizontal Carousel */}
+<div className="my-8">
+  <div className="flex items-center justify-between mb-6">
+    <h2 className="text-xl font-extrabold" style={{ color: T.textMain }}>
+      {activeCategory === "all"
+        ? searchQuery ? `نتائج البحث عن: "${searchQuery}"` : "جميع المنتجات"
+        : CATEGORIES.find((c) => c.id === activeCategory)?.name}
+    </h2>
+    {filteredProducts.length > 0 && (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => productsScrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+          className="p-2 rounded-full border bg-white text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-90"
+          style={{ borderColor: T.cardBorder }}
+        >
+          <ChevronRight size={20} />
+        </button>
+        <button
+          onClick={() => productsScrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
+          className="p-2 rounded-full border bg-white text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-90"
+          style={{ borderColor: T.cardBorder }}
+        >
+          <ChevronLeft size={20} />
+        </button>
+      </div>
+    )}
+  </div>
 
-          {filteredProducts.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-3xl border shadow-sm" style={{ borderColor: T.cardBorder }}>
-              <p className="text-base font-bold text-slate-500">لا توجد منتجات تطابق اختيارك حالياً.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
-              {filteredProducts.map((p) => (
-                <div key={p.id} className="w-full flex justify-center">
-                  <ProductCard p={p} onAddToCart={handleAddToCart} />
-                </div>
-              ))}
-            </div>
-          )}
+  {filteredProducts.length === 0 ? (
+    <div className="text-center py-20 bg-white rounded-3xl border shadow-sm" style={{ borderColor: T.cardBorder }}>
+      <p className="text-base font-bold text-slate-500">لا توجد منتجات تطابق اختيارك حالياً.</p>
+    </div>
+  ) : (
+    <div
+      ref={productsScrollRef}
+      className="no-scrollbar flex gap-5 overflow-x-auto scroll-smooth pb-4 space-x-4 space-x-reverse"
+      style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+    >
+      {filteredProducts.map((p) => (
+        <div key={p.id} className="min-w-[250px] shrink-0">
+          <ProductCard p={p} onAddToCart={handleAddToCart} />
         </div>
+      ))}
+    </div>
+  )}
+</div>
       </main>
 
       {/* Footer */}
