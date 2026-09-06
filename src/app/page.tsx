@@ -472,17 +472,19 @@ ${itemsList}
 
             {cart.length > 0 && (
               <div className="absolute bottom-0 inset-x-0 p-4 border-t bg-white space-y-3 shadow-lg" style={{ borderColor: T.cardBorder }}>
-                <div className="flex justify-between text-sm font-extrabold" style={{ color: T.textMain }}>
-                  <span>الإجمالي:</span>
-                  <span style={{ color: T.accent }}>{egp(total)}</span>
+                <div className="flex justify-between text-sm font-extrabold text-slate-900">
+                  <span className="text-slate-900">الإجمالي:</span>
+                  <span className="text-slate-900">{egp(total)}</span>
                 </div>
-                <button
-                  onClick={() => setShowCheckoutForm(true)}
-                  className="w-full py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 text-white shadow-md transition-all hover:opacity-90"
-                  style={{ background: T.primary }}
-                >
-                  <CreditCard size={16} /> متابعة لإدخال البيانات
-                </button>
+  <Link 
+  href="/checkout" 
+  onClick={onClose} 
+  className="w-full py-3 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2" 
+  style={{ background: T.primary, color: "#FFFFFF" }}
+>
+  <CreditCard size={16} color="#FFFFFF" /> 
+  <span style={{ color: "#FFFFFF" }}>متابعة لإدخال البيانات</span>
+</Link>
               </div>
             )}
           </>
