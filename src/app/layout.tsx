@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "حسن السنان لمستحضرات التجميل",
   description: "متجرك الموثوق لمستحضرات التجميل الأصلية - جملة وقطاعي",
+  verification: {
+    google: "LhQos-4qxmwnNh18SnytiJfpJGO62qDcpgxHtNzGA3c",
+  },
 };
 
 export default function RootLayout({
