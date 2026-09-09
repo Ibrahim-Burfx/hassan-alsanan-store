@@ -1,10 +1,5 @@
 'use client';
 
-
-
-
-
-
 import Link from 'next/link'
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
@@ -16,18 +11,20 @@ import {
 // استدعاء عميل Supabase المربوط بملف supabase.ts
 import { supabase } from "@/supabase";
 import { CATEGORIES, normalizeProduct, type Product, type ProductRow } from "@/lib/products";
+import FeaturedBrandsSection from "@/components/FeaturedBrandsSection";
+import ProductCard from "@/components/ProductCard";
 
 /* ============================= DESIGN TOKENS ============================= */
 const T = {
-  bg: "#FAFAFA",
-  cardBg: "#FFFFFF",
-  cardBorder: "#E5E7EB",
-  textMain: "#111827",
-  textMuted: "#6B7280",
+  bg: "linear-gradient(180deg, #fafaf8 0%, #f5f3ef 100%)",
+  cardBg: "#FFFEFC",
+  cardBorder: "#EEE9E2",
+  textMain: "#1F2937",
+  textMuted: "#5F6472",
   primary: "#1E293B",
   primaryHover: "#0F172A",
   accent: "#D97706",
-  accentBg: "#FEF3C7",
+  accentBg: "#F7F1E7",
   accentRose: "#E11D48",
   whatsapp: "#25D366",
 };
@@ -81,10 +78,6 @@ function TikTokIcon() {
   );
 }
 
-
-
-
-
 function AnnouncementMarquee() {
   const MESSAGE_TEXT =" شحن مجاني للطلبات فوق 500 جنيه 🚚 لفترة محدودة!";
   const REPEATS_PER_GROUP = 6;
@@ -136,62 +129,30 @@ function AnnouncementMarquee() {
   );
 }
 
-
-
-
-
-
-
-/* ============================= PRODUCT CARD ============================= */
-function ProductCard({ p, onAddToCart }: { p: Product; onAddToCart: (p: Product) => void }) {
+/* ============================= PRODUCT CARD SKELETON ============================= */
+function ProductCardSkeleton() {
   return (
     <div
-      className="w-64 shrink-0 border rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-xl bg-white group"
+      className="w-64 shrink-0 border rounded-2xl overflow-hidden flex flex-col justify-between bg-white animate-pulse"
       style={{ borderColor: T.cardBorder }}
     >
-      <Link href={`/product/${p.id}`} className="relative block cursor-pointer p-4 bg-slate-50/50">
-        <div className="h-44 rounded-xl bg-white flex items-center justify-center text-5xl relative border border-slate-100 shadow-sm group-hover:scale-105 transition-transform duration-300 overflow-hidden">
-          {isUrl(p.imageUrl) ? (
-            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain p-2 mix-blend-multiply" />
-          ) : (
-            <span>{p.imageUrl}</span>
-          )}
+      <div className="p-4 bg-slate-50/50">
+        <div className="h-44 rounded-xl bg-slate-200 border border-slate-100" />
 
-          {p.isOnSale && (
-            <span className="absolute top-2 right-2 text-[11px] font-bold px-2.5 py-0.5 rounded-full text-white shadow-sm z-10" style={{ background: T.accentRose }}>
-              خصم {p.discountPercentage}%
-            </span>
-          )}
-          {p.isBestSeller && !p.isOnSale && (
-            <span className="absolute top-2 right-2 text-[11px] font-bold px-2.5 py-0.5 rounded-full text-white shadow-sm z-10" style={{ background: T.accent }}>
-              الأكثر مبيعاً
-            </span>
-          )}
+        <div className="mt-3 space-y-2">
+          <div className="h-2.5 w-16 rounded bg-slate-200" />
+          <div className="h-3 w-full rounded bg-slate-200" />
+          <div className="h-3 w-2/3 rounded bg-slate-200" />
+          <div className="h-2.5 w-20 rounded bg-slate-200 mt-2" />
         </div>
-        <div className="mt-3">
-          <span className="text-[11px] font-bold uppercase tracking-wider block mb-1" style={{ color: T.accent }}>{p.brand}</span>
-          <h3 className="text-xs font-bold line-clamp-2 h-8 leading-snug" style={{ color: T.textMain }}>
-            {p.name}
-          </h3>
-          <div className="flex items-center gap-1.5 mt-2">
-            <Stars rating={p.rating} />
-            <span className="text-[10px] font-medium" style={{ color: T.textMuted }}>({p.reviewsCount})</span>
-          </div>
-        </div>
-      </Link>
+      </div>
 
       <div className="p-4 border-t flex flex-col gap-3 bg-white" style={{ borderColor: T.cardBorder }}>
-        <div className="flex items-baseline justify-between">
-          <span className="text-base font-black" style={{ color: T.textMain }}>{egp(p.price)}</span>
-          {p.oldPrice && <span className="text-xs line-through font-medium" style={{ color: T.textMuted }}>{egp(p.oldPrice)}</span>}
+        <div className="space-y-1.5">
+          <div className="h-6 w-28 rounded bg-slate-200" />
+          <div className="h-2.5 w-16 rounded bg-slate-200" />
         </div>
-        <button
-          onClick={() => onAddToCart(p)}
-          className="w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90 shadow-sm active:scale-95"
-          style={{ background: T.primary, color: "#fff" }}
-        >
-          <Plus size={15} /> أضف للسلة
-        </button>
+        <div className="h-10 w-full rounded-xl bg-slate-200" />
       </div>
     </div>
   );
@@ -215,8 +176,15 @@ function HorizontalSection({ title, products, onAddToCart }: {
   if (products.length === 0) return null;
 
   return (
-    <section className="my-10">
-      <div className="flex justify-between items-end mb-5 px-4 max-w-7xl mx-auto">
+    <section
+      className="my-10 rounded-[26px]"
+      style={{
+        background: "linear-gradient(180deg, rgba(255,250,245,0.85) 0%, rgba(255,255,255,0.35) 100%)",
+        border: "1px solid rgba(217,119,6,0.08)",
+        boxShadow: "0 10px 28px rgba(217,119,6,0.04)",
+      }}
+    >
+      <div className="flex justify-between items-end mb-5 px-4 max-w-7xl mx-auto pt-4">
         <div>
           <h2 className="text-xl font-extrabold" style={{ color: T.textMain }}>
             {title}
@@ -330,7 +298,6 @@ function CartDrawer({ open, onClose, cart, setCart }: {
       alert("الرجاء ملء جميع البيانات المطلوبة");
       return;
     }
-            <path fill="#25F4EE" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.49 2.87 1.1-.01 2.15-.64 2.61-1.62.16-.29.24-.61.24-.93.01-3.47-.02-6.94-.01-10.41.01-3.17-.01-6.33.02-9.5z" />
     setIsSubmitting(true);
 
     try {
@@ -476,15 +443,15 @@ ${itemsList}
                   <span className="text-slate-900">الإجمالي:</span>
                   <span className="text-slate-900">{egp(total)}</span>
                 </div>
-  <Link 
-  href="/checkout" 
-  onClick={onClose} 
-  className="w-full py-3 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2" 
-  style={{ background: T.primary, color: "#FFFFFF" }}
->
-  <CreditCard size={16} color="#FFFFFF" /> 
-  <span style={{ color: "#FFFFFF" }}>متابعة لإدخال البيانات</span>
-</Link>
+                <Link
+                  href="/checkout"
+                  onClick={onClose}
+                  className="w-full py-3 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2"
+                  style={{ background: T.primary, color: "#FFFFFF" }}
+                >
+                  <CreditCard size={16} color="#FFFFFF" />
+                  <span style={{ color: "#FFFFFF" }}>متابعة لإدخال البيانات</span>
+                </Link>
               </div>
             )}
           </>
@@ -570,8 +537,6 @@ ${itemsList}
   );
 }
 
-
-
 /* ============================= MAIN STORE APP ============================= */
 export default function StoreApp() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -584,19 +549,24 @@ export default function StoreApp() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-const productsScrollRef = useRef<HTMLDivElement>(null);
+  const productsScrollRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     let active = true;
 
     const loadProducts = async () => {
-      const { data, error } = await supabase.from("products").select("*").order("id", { ascending: true });
-      if (error) {
-        console.error("Failed to load products:", error);
-      } else if (active) {
-        const rows = Array.isArray(data) ? (data as ProductRow[]) : [];
-        setProducts(rows.map(normalizeProduct));
+      setProductsLoading(true);
+      try {
+        const { data, error } = await supabase.from("products").select("*").order("id", { ascending: true });
+        if (error) {
+          console.error("Failed to load products:", error);
+        } else if (active) {
+          const rows = Array.isArray(data) ? (data as ProductRow[]) : [];
+          setProducts(rows.map(normalizeProduct));
+        }
+      } finally {
+        if (active) setProductsLoading(false);
       }
-      if (active) setProductsLoading(false);
     };
 
     void loadProducts();
@@ -658,31 +628,37 @@ const productsScrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="min-h-screen font-sans" style={{ background: T.bg, color: T.textMain }}>
-      
+
       <AnnouncementMarquee />
 
       {/* Main Header / Navigation Bar — Sticky Shrinking Header */}
       <header
-        className={`sticky top-0 z-40 bg-white border-b transition-all duration-300 ease-in-out ${
-          isScrolled ? "py-2 shadow-md" : "py-4 sm:py-6 shadow-sm"
+        className={`sticky top-0 z-40 border-b transition-all duration-300 ease-in-out ${
+          isScrolled ? "py-2" : "py-4 sm:py-6"
         }`}
-        style={{ borderColor: T.cardBorder }}
+        style={{
+          borderColor: "rgba(17,24,39,0.06)",
+          background: isScrolled
+            ? "linear-gradient(180deg, rgba(250,250,248,0.98) 0%, rgba(255,255,255,0.98) 100%)"
+            : "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.98) 100%)",
+          boxShadow: isScrolled ? "0 8px 24px rgba(15,23,42,0.05)" : "0 6px 18px rgba(15,23,42,0.025)",
+        }}
       >
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between gap-4">
-          
+
           {/* Mobile Menu Button */}
           <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100">
             <Menu size={24} />
           </button>
 
           {/* Logo Area */}
-          <div 
-            className="flex items-center cursor-pointer transition-transform hover:scale-105 py-1" 
+          <div
+            className="flex items-center cursor-pointer transition-transform hover:scale-105 py-1"
             onClick={() => { setActiveCategory("all"); setSearchQuery(""); }}
           >
-            <img 
-              src="/logo.jpg" 
-              alt="حسن السنان" 
+            <img
+              src="/logo.jpg"
+              alt="حسن السنان"
               className={`w-auto object-contain mix-blend-multiply transition-all duration-300 ease-in-out ${
                 isScrolled ? "h-14 sm:h-16 md:h-20" : "h-32 sm:h-40 md:h-48 max-h-48"
               }`}
@@ -737,19 +713,22 @@ const productsScrollRef = useRef<HTMLDivElement>(null);
           </div>
         </div>
 
+        <div className="block md:hidden px-4 pb-3 pt-1">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="بحث عن منتج..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-100 rounded-full pl-4 pr-10 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 border border-transparent"
+            />
+            <Search size={16} className="absolute right-3 top-3 text-slate-400" />
+          </div>
+        </div>
+
         {/* Mobile Nav Drawer / Overlay */}
         {menuOpen && (
-          <div className="lg:hidden border-t bg-white px-4 py-4 space-y-3 shadow-md mt-2" style={{ borderColor: T.cardBorder }}>
-            <div className="relative mb-3">
-              <input
-                type="text"
-                placeholder="بحث..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-100 rounded-xl pl-4 pr-10 py-2 text-xs font-semibold focus:outline-none"
-              />
-              <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
-            </div>
+          <div className="lg:hidden border-t bg-white px-4 py-4 space-y-3 shadow-md mt-0" style={{ borderColor: T.cardBorder }}>
             <div className="flex flex-col gap-2 font-bold text-xs">
               <button
                 onClick={() => { setActiveCategory("all"); setMenuOpen(false); }}
@@ -775,7 +754,10 @@ const productsScrollRef = useRef<HTMLDivElement>(null);
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Category Pills Bar */}
-        <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-6">
+        <div
+          className="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-6 rounded-[22px]"
+          style={{ background: "linear-gradient(180deg, rgba(245,243,239,0.94) 0%, rgba(255,255,255,0.2) 100%)" }}
+        >
           <button
             onClick={() => setActiveCategory("all")}
             className={`px-4 py-2 rounded-full text-xs font-extrabold whitespace-nowrap transition-all shadow-sm ${
@@ -800,6 +782,8 @@ const productsScrollRef = useRef<HTMLDivElement>(null);
           ))}
         </div>
 
+        <FeaturedBrandsSection />
+
         {/* Featured Horizontal Sections (when viewing all categories) */}
         {activeCategory === "all" && !searchQuery && (
           <>
@@ -816,56 +800,67 @@ const productsScrollRef = useRef<HTMLDivElement>(null);
           </>
         )}
 
-      {/* Main Products Grid — Horizontal Carousel */}
-<div className="my-8">
-  <div className="flex items-center justify-between mb-6">
-    <h2 className="text-xl font-extrabold" style={{ color: T.textMain }}>
-      {activeCategory === "all"
-        ? searchQuery ? `نتائج البحث عن: "${searchQuery}"` : "جميع المنتجات"
-        : CATEGORIES.find((c) => c.id === activeCategory)?.name}
-    </h2>
-    {filteredProducts.length > 0 && (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => productsScrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
-          className="p-2 rounded-full border bg-white text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-90"
-          style={{ borderColor: T.cardBorder }}
-        >
-          <ChevronRight size={20} />
-        </button>
-        <button
-          onClick={() => productsScrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
-          className="p-2 rounded-full border bg-white text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-90"
-          style={{ borderColor: T.cardBorder }}
-        >
-          <ChevronLeft size={20} />
-        </button>
-      </div>
-    )}
-  </div>
+        {/* Main Products Grid — Horizontal Carousel */}
+        <div className="my-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-extrabold" style={{ color: T.textMain }}>
+              {activeCategory === "all"
+                ? searchQuery ? `نتائج البحث عن: "${searchQuery}"` : "جميع المنتجات"
+                : CATEGORIES.find((c) => c.id === activeCategory)?.name}
+            </h2>
+            {!productsLoading && filteredProducts.length > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => productsScrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+                  className="p-2 rounded-full border bg-white text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-90"
+                  style={{ borderColor: T.cardBorder }}
+                >
+                  <ChevronRight size={20} />
+                </button>
+                <button
+                  onClick={() => productsScrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
+                  className="p-2 rounded-full border bg-white text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-90"
+                  style={{ borderColor: T.cardBorder }}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+              </div>
+            )}
+          </div>
 
-  {filteredProducts.length === 0 ? (
-    <div className="text-center py-20 bg-white rounded-3xl border shadow-sm" style={{ borderColor: T.cardBorder }}>
-      <p className="text-base font-bold text-slate-500">لا توجد منتجات تطابق اختيارك حالياً.</p>
-    </div>
-  ) : (
-    <div
-      ref={productsScrollRef}
-      className="no-scrollbar flex gap-5 overflow-x-auto scroll-smooth pb-4 space-x-4 space-x-reverse"
-      style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
-    >
-      {filteredProducts.map((p) => (
-        <div key={p.id} className="min-w-[250px] shrink-0">
-          <ProductCard p={p} onAddToCart={handleAddToCart} />
+          {productsLoading ? (
+            <div
+              className="no-scrollbar flex gap-5 overflow-x-auto pb-4"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+            >
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={`skeleton-${i}`} className="min-w-[250px] shrink-0">
+                  <ProductCardSkeleton />
+                </div>
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-3xl border shadow-sm" style={{ borderColor: T.cardBorder }}>
+              <p className="text-base font-bold text-slate-500">لا توجد منتجات تطابق اختيارك حالياً.</p>
+            </div>
+          ) : (
+            <div
+              ref={productsScrollRef}
+              className="no-scrollbar flex gap-5 overflow-x-auto scroll-smooth pb-4 space-x-4 space-x-reverse"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+            >
+              {filteredProducts.map((p) => (
+                <div key={p.id} className="min-w-[250px] shrink-0">
+                  <ProductCard p={p} onAddToCart={handleAddToCart} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ))}
-    </div>
-  )}
-</div>
       </main>
 
       {/* Footer */}
-      <footer className="!bg-slate-900 border-t mt-20" style={{ borderColor: T.cardBorder, backgroundColor: "#0f172a" }}>
+      <footer className="!bg-slate-900 border-t mt-20" style={{ borderColor: T.cardBorder, background: "linear-gradient(180deg, #0f172a 0%, #111827 100%)" }}>
         <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
           <div>
             <h3 className="!text-white text-base font-extrabold mb-3" style={{ color: "#FFFFFF" }}>حسن السنان</h3>
