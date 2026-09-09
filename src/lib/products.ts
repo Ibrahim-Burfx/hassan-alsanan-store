@@ -46,7 +46,7 @@ export const CATEGORIES = [
   { id: "haircare", name: "العناية بالشعر", icon: "💇‍♀️" },
   { id: "bodycare", name: "العناية بالجسم", icon: "🧼" },
   { id: "makeup", name: "المكياج", icon: "💄" },
-  { id: "perfume", name: "العطور", icon: "🌸" },
+  { id: "perfumes", name: "العطور", icon: "🌸" },
   { id: "accessories", name: "الإكسسوارات", icon: "🎀" },
   { id: "salon", name: "مستلزمات الكوافير", icon: "✂️" },
 ];
