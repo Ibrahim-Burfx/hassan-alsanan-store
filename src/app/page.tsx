@@ -86,7 +86,7 @@ function TikTokIcon() {
 
 
 function AnnouncementMarquee() {
-  const MESSAGE_TEXT = "شحن مجاني لفترة محدودة على جميع الطلبات! 🚚";
+  const MESSAGE_TEXT =" شحن مجاني للطلبات فوق 500 جنيه 🚚 لفترة محدودة!";
   const REPEATS_PER_GROUP = 6;
 
   const messageGroup = (groupKey: string) => (
